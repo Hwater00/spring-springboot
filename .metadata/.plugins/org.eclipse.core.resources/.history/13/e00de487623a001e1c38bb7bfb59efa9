@@ -1,0 +1,10 @@
+package com.study.springboot.jdbc;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper // 해당 인터페이스의 구현을 xml로 하겠다.
+public interface IMyUserDao {
+	List<MyUserDTO>list();
+}

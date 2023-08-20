@@ -1,0 +1,6 @@
+server.port=8081
+#JSP
+spring.mvc.view.prefix=/WEB-INF/views/
+spring.mvc.view.suffix=.jsp
+
+spring.main.allow-circular-references=true
