@@ -1,8 +1,0 @@
-package com.study.springboot.dto;
-
-public class SimpleBbsDto {
-	private int id;
-	private String writer;
-	private String title;
-	private String comtemt;
-}

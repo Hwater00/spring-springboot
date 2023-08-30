@@ -1,2 +1,0 @@
-log4jdbc.spylogdelegator.name=net.sf.log4.jdbc.log.slf4j.slf4jSpyLogDeldgator
-log4jdbc.dump.sql.maxlinelength=0
