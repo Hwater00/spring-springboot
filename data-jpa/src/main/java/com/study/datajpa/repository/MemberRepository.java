@@ -5,19 +5,19 @@ import com.study.datajpa.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 // 인터페이스가 인터페이스를 상속
-public interface MemberRepository extends JpaRepository<Member,Long> {
+// MemberRepositoryCustom 인터페이스도 상속
+public interface MemberRepository extends JpaRepository<Member,Long>, MemberRepositoryCustom {
     // 이름을 가지고 유저를 찾기:<- 도메인 특화 기능
     // 커스텀 기능으로 이 기늠만 구현하고자 함.
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);// 쿼리 메서드 기능
@@ -81,6 +81,17 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     //@EntityGraph("Member.all") // 미리  Member에서 지정
     List<Member> findEntityGraphByUsername(@Param("username") String username);
 
+    @QueryHints(value= @QueryHint(name = "org.hibernate.readOnly", value ="true"))
+    Member findReadOnlyByUsername(String username);
 
+    // select for update 비관적락
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUsername(String username);
 
+    // Projections
+    // 엔티티가 아니라
+    List<UsernameOnly> findProjectionsByUsername(@Param("username") String username);
+
+    // 클래스 기반 Projections
+    <T> List<T> findProjectionsDtoByUsername(@Param("username") String username, Class<T> type);
 }

@@ -33,6 +33,9 @@ class MemberRepositoryTest {
     @PersistenceContext
     EntityManager em;
 
+    // 사용자 정의 추가
+    @Autowired MemberQueryRepository memberQueryRepository;
+
     @Test
     public void testMember(){
         System.out.println("memberRepository ="+memberRepository.getClass());
@@ -334,6 +337,108 @@ class MemberRepositoryTest {
 
     @Test
     public void queryHint(){
+        Member member1 = new Member("member1",10);
+        memberRepository.save(member1);
+        em.flush(); // JPA 영속성 컨텍스트내 1차 캐시를 DB에 동기화만 하고
+        em.clear(); // 삭제는 clear
+        
+        // when
+        Member findmember = memberRepository.findReadOnlyByUsername("member1");
+        findmember.setUsername("member2");
+
+        em.flush(); //변경 감지
+    }
+
+    @Test
+    public void lock(){
+        // given
+        Member member1 = new Member("member1",10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        //when
+        List<Member> result = memberRepository.findLockByUsername("member1");
+    }
+
+    @Test
+    public void callCustom(){
+        List<Member> result = memberRepository.findMemberCustom();
+    }
+
+
+    @Test
+    public void projections(){
+        // given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member m1 = new Member("m1",0,teamA);
+        Member m2 = new Member("m2",0,teamA);
+        em.persist(m1);
+        em.persist(m2);
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<UsernameOnly> result = memberRepository.findProjectionsByUsername("m1");
+        for (UsernameOnly usernameOnly : result) {
+            System.out.println("usernameOnly=" +usernameOnly);
+        }
 
     }
+
+    @Test
+    public void projectionsDto(){
+        // given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member m1 = new Member("m1",0,teamA);
+        Member m2 = new Member("m2",0,teamA);
+        em.persist(m1);
+        em.persist(m2);
+
+        em.flush();
+        em.clear();
+
+        // when
+//      List<UsernameOnlyDto> result = memberRepository.findProjectionsDtoByUsername("m1");
+        //      동적 Projection은 제너릭 <T> 타입으로 바꾸고 클래스를 명시헤줌
+        List<UsernameOnlyDto> result = memberRepository.findProjectionsDtoByUsername("m1", UsernameOnlyDto.class);
+        for (UsernameOnlyDto usernameOnlyDto : result) {
+            System.out.println("usernameOnly=" +usernameOnlyDto);
+        }
+    }
+
+    @Test
+    public void NestedClosedProjections(){
+        // given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member m1 = new Member("m1",0,teamA);
+        Member m2 = new Member("m2",0,teamA);
+        em.persist(m1);
+        em.persist(m2);
+
+        em.flush();
+        em.clear();
+
+        // when
+        
+        // 동적 Projection은 제너릭 <T> 타입으로 바꾸고 클래스를 명시헤줌
+        // 쿼리조건만 username이고 실제 조건은 NestedClosedProjections를 사용함
+        List<NestedClosedProjections> result = memberRepository.findProjectionsDtoByUsername("m1", NestedClosedProjections.class);
+
+        for (NestedClosedProjections usernameOnly : result) {
+           String username = usernameOnly.getUsername();
+            System.out.println("username"+username);
+            String teamName = usernameOnly.getTeam().getName();
+            System.out.println("teamName="+teamName);
+        }
+
+    }
+
 }
